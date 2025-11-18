@@ -49,9 +49,10 @@ if ! $CONDA env list | grep -Fq "$ENV_NAME"; then
   # Install lm_eval with math dependencies, commit is same as https://github.com/vllm-project/vllm/blob/main/.buildkite/scripts/hardware_ci/run-tpu-v1-test.sh#L64
   $CONDA run -n "$ENV_NAME" pip install "lm-eval[math] @ git+https://github.com/EleutherAI/lm-evaluation-harness.git@206b7722158f58c35b7ffcd53b035fdbdda5126d"
   $CONDA run -n "$ENV_NAME" bash -c "cd '$VLLM_FOLDER' && VLLM_USE_PRECOMPILED=1 pip install --editable ."
-
+  
+  TPU_INFERENCE_HASH=37afd29db2d7a4ba70175e0962a52dfba7257bd6
   # Check if TPU_INFERENCE_HASH is set and not empty
-  if [[ -n "$TPU_INFERENCE_HASH" ]]; then
+  # if [[ -n "$TPU_INFERENCE_HASH" ]]; then
     echo "TPU_INFERENCE_HASH is set to '$TPU_INFERENCE_HASH'. Cloning and installing tpu-inference..."
 
     # Clone or update tpu-inference repo
@@ -70,17 +71,19 @@ if ! $CONDA env list | grep -Fq "$ENV_NAME"; then
     echo "Installing tpu_inference package into '$ENV_NAME'..."
     $CONDA run -n "$ENV_NAME" bash -c "cd '$TPU_INFERENCE_FOLDER' && pip install -r requirements.txt && pip install -e ."
     $CONDA run -n "$ENV_NAME" bash -c "cd '$TPU_INFERENCE_FOLDER' && pip install -r requirements_benchmarking.txt"
-    $CONDA run -n "$ENV_NAME" bash -c "pip install --pre jax==0.8.0.dev20250928 --index-url https://us-python.pkg.dev/ml-oss-artifacts-published/jax/simple/ --find-links https://storage.googleapis.com/jax-releases/libtpu_releases.html"
-    $CONDA run -n "$ENV_NAME" bash -c "pip install --pre jaxlib==0.8.0.dev20250928 --index-url https://us-python.pkg.dev/ml-oss-artifacts-published/jax/simple/ --find-links https://storage.googleapis.com/jax-releases/libtpu_releases.html"
+    # $CONDA run -n "$ENV_NAME" bash -c "pip install --pre jax==0.8.0.dev20250928 --index-url https://us-python.pkg.dev/ml-oss-artifacts-published/jax/simple/ --find-links https://storage.googleapis.com/jax-releases/libtpu_releases.html"
+    # $CONDA run -n "$ENV_NAME" bash -c "pip install --pre jaxlib==0.8.0.dev20250928 --index-url https://us-python.pkg.dev/ml-oss-artifacts-published/jax/simple/ --find-links https://storage.googleapis.com/jax-releases/libtpu_releases.html"
+    $CONDA run -n "$ENV_NAME" bash -c "pip install --pre -i https://us-python.pkg.dev/ml-oss-artifacts-published/jax/simple/ -f https://storage.googleapis.com/jax-releases/libtpu_releases.html jax==0.8.1.dev20251105 jaxlib==0.8.1.dev20251105 libtpu==0.0.28.dev20251105+nightly"
+    $CONDA run -n "$ENV_NAME" bash -c "pip install -U torchax"
+
     $CONDA run -n "$ENV_NAME" bash -c "pip install numba"
-    $CONDA run -n "$ENV_NAME" bash -c "mkdir -p ../shared-wheels && gsutil cp gs://libtpu-tpu7x-releases/wheels/libtpu/libtpu-0.0.24.dev20250928+tpu7x-cp312-cp312-manylinux_2_31_x86_64.whl ../shared-wheels/"
-    $CONDA run -n "$ENV_NAME" bash -c "pip install ../shared-wheels/libtpu-0.0.24.dev20250928+tpu7x-cp312-cp312-manylinux_2_31_x86_64.whl"
+    # $CONDA run -n "$ENV_NAME" bash -c "mkdir -p ../shared-wheels && gsutil cp gs://libtpu-tpu7x-releases/wheels/libtpu/libtpu-0.0.24.dev20250928+tpu7x-cp312-cp312-manylinux_2_31_x86_64.whl ../shared-wheels/"
+    # $CONDA run -n "$ENV_NAME" bash -c "pip install ../shared-wheels/libtpu-0.0.24.dev20250928+tpu7x-cp312-cp312-manylinux_2_31_x86_64.whl"
     echo "tpu-inference installation complete."
 
     $CONDA run -n "$ENV_NAME" bash -c "gsutil cp gs://amangu-multipods/code/device.py /mnt/disks/persist/bm-agent/miniconda3/envs/$ENV_NAME/lib/python3.12/site-packages/tpu_info/device.py"
     echo "Local v7x changes complete."
-
-  fi
+  # fi
 fi
 
 # Safety cleanup on exit

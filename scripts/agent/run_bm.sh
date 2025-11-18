@@ -113,17 +113,19 @@ if [[ "$MODEL" == *"Qwen/Qwen3"* && "${ADDITIONAL_CONFIG:-}" == *"float8"* ]]; t
 fi
 
 echo "Printing the vllm serve command used to start the server:"
-echo "VLLM_USE_V1=1 VLLM_TORCH_PROFILER_DIR=\"$PROFILE_FOLDER\" vllm serve $MODEL \
+echo "USE_MOE_EP_KERNEL=0 MODEL_IMPL_TYPE=vllm VLLM_TORCH_PROFILER_DIR=\"$PROFILE_FOLDER\" vllm serve $MODEL \
  --seed 42 \
  --disable-log-requests \
  --max-num-seqs $MAX_NUM_SEQS \
  --max-num-batched-tokens $MAX_NUM_BATCHED_TOKENS \
  --tensor-parallel-size $TENSOR_PARALLEL_SIZE \
  --no-enable-prefix-caching \
+ --async-scheduling \
+ --gpu-memory-utilization=0.8 \
  --download_dir $DOWNLOAD_DIR \
  --max-model-len $MAX_MODEL_LEN $EXTRA_ARGS > \"$VLLM_LOG\" 2>&1 &"
 
-eval "VLLM_USE_V1=1 VLLM_TORCH_PROFILER_DIR=\"$PROFILE_FOLDER\" vllm serve $MODEL \
+eval "USE_MOE_EP_KERNEL=0 MODEL_IMPL_TYPE=vllm VLLM_TORCH_PROFILER_DIR=\"$PROFILE_FOLDER\" vllm serve $MODEL \
  --seed 42 \
  --disable-log-requests \
  --max-num-seqs $MAX_NUM_SEQS \
@@ -131,6 +133,8 @@ eval "VLLM_USE_V1=1 VLLM_TORCH_PROFILER_DIR=\"$PROFILE_FOLDER\" vllm serve $MODE
  --tensor-parallel-size $TENSOR_PARALLEL_SIZE \
  --no-enable-prefix-caching \
  --download_dir $DOWNLOAD_DIR \
+ --gpu-memory-utilization=0.8 \
+ --async-scheduling \
  --max-model-len $MAX_MODEL_LEN $EXTRA_ARGS > \"$VLLM_LOG\" 2>&1 &"
 
 
@@ -255,6 +259,18 @@ read throughput p99_e2el < <(run_benchmark "inf" | tail -n 1)
 
 echo "throughput:$throughput"
 echo "p99_e2el:$p99_e2el"
+
+# Validate that we got numbers
+if [[ -z "$throughput" || ! "$throughput" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+  echo "Error: Failed to capture valid throughput from benchmark. Benchmark may have crashed."
+  echo "Check bm_log.txt for details."
+  exit 1
+fi
+
+if [[ -z "$p99_e2el" || ! "$p99_e2el" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+  echo "Error: Failed to capture valid P99 E2EL from benchmark."
+  exit 1
+fi
 
 # Step 1: check if initial run meets the E2EL requirement
 p99_int=$(printf "%.0f" "$p99_e2el")

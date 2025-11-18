@@ -123,6 +123,7 @@ clone_and_get_hash() {
 if [[ "${SKIP_BUILD_IMAGE:-0}" != "1" ]]; then
 
   # Clone and get hash
+  VLLM_HASH=e9af6ba62ac99683139ff8d6bac87677fecf0b0c
   VLLM_HASH=$(clone_and_get_hash "https://github.com/vllm-project/vllm.git" "artifacts/vllm" "$VLLM_HASH")
   echo "resolved VLLM_HASH: $VLLM_HASH"
 

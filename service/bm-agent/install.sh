@@ -9,19 +9,37 @@ fi
 echo "sudo apt-get update && sudo apt-get install -y jq gawk"
 sudo apt-get update && sudo apt-get install -y jq gawk
 
+# Ensure the bm-agent user owns its home directory and can write to it.
+sudo chown -R bm-agent:bm-agent /home/bm-agent
+
 # Get current Git branch
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-# Run as bm-agent
+# Clean up old repo and clone fresh as bm-agent user
+echo "Cleaning up old bm-infra..."
+sudo rm -rf /home/bm-agent/bm-infra
+
 sudo -u bm-agent -i bash <<EOF
 
-echo "Cleaning up old bm-infra..."
-rm -rf bm-infra
-
 echo "Cloning branch '$CURRENT_BRANCH' from bm-infra..."
-git clone --branch "$CURRENT_BRANCH" https://github.com/QiliangCui/bm-infra.git
+git clone --branch "$CURRENT_BRANCH" https://github.com/pv97/bm-infra.git
 
 EOF
+
+# Ensure bm-agent owns the persistent directory it needs to write to.
+# This is critical for conda env creation and other operations.
+sudo mkdir -p /mnt/disks/persist/bm-agent
+sudo chown -R bm-agent:bm-agent /mnt/disks/persist/bm-agent
+
+# Set HF_HOME to a directory owned by bm-agent so models are cached correctly.
+# This is set globally for the service via /etc/environment.
+HF_HOME_VAR='HF_HOME=/mnt/disks/persist/bm-agent/hf_home'
+if ! grep -q "^${HF_HOME_VAR}$" /etc/environment; then
+  echo "Appending ${HF_HOME_VAR} to /etc/environment..."
+  echo "${HF_HOME_VAR}" | sudo tee -a /etc/environment > /dev/null
+else
+  echo "${HF_HOME_VAR} already set in /etc/environment."
+fi
 
 if [[ "${LOCAL_RUN_BM:-}" == "1" ]]; then  
   echo "=================================================================="

@@ -64,7 +64,7 @@ tail -n +2 "$CSV_FILE" | while read -r line || [ -n "${line}" ]; do
   RECORD_ID=$(uuidgen | tr 'A-Z' 'a-z')
 
   # calculate the queue name from the device
-  QUEUE_TOPIC="vllm-bm-queue-$DEVICE"
+  QUEUE_TOPIC="vllm-bm-queue-piv"
 
   # Check if the topic exists
   if ! gcloud pubsub topics describe "$QUEUE_TOPIC" --project="$GCP_PROJECT_ID" &>/dev/null; then
