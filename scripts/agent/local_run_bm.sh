@@ -50,6 +50,7 @@ if ! $CONDA env list | grep -Fq "$ENV_NAME"; then
   $CONDA run -n "$ENV_NAME" bash -c "cd '$VLLM_FOLDER' && pip install -r requirements/tpu.txt"
   $CONDA run -n "$ENV_NAME" bash -c "cd '$VLLM_FOLDER' && VLLM_TARGET_DEVICE='tpu' python -m pip install -e ."
 
+  TPU_INFERENCE_HASH=b8df973e5ca934db1df120dfec03626822c4ca1f
   # Check if TPU_INFERENCE_HASH is set and not empty
   if [[ -n "$TPU_INFERENCE_HASH" ]]; then
     echo "TPU_INFERENCE_HASH is set to '$TPU_INFERENCE_HASH'. Cloning and installing tpu-inference..."

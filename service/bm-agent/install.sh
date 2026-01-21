@@ -12,6 +12,9 @@ sudo apt-get update && sudo apt-get install -y jq gawk
 # Get current Git branch
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
+# Ensure the bm-agent user owns its home directory and can write to it.
+sudo chown -R bm-agent:bm-agent /home/bm-agent
+
 # Run as bm-agent
 sudo -u bm-agent -i bash <<EOF
 
@@ -19,7 +22,7 @@ echo "Cleaning up old bm-infra..."
 rm -rf bm-infra
 
 echo "Cloning branch '$CURRENT_BRANCH' from bm-infra..."
-git clone --branch "$CURRENT_BRANCH" https://github.com/QiliangCui/bm-infra.git
+git clone --branch "$CURRENT_BRANCH" https://github.com/pv97/bm-infra.git
 
 EOF
 
@@ -29,9 +32,24 @@ if [[ "${LOCAL_RUN_BM:-}" == "1" ]]; then
   echo "=================================================================="
   echo "Installing Miniconda for bm-agent user..."
 
+  # Ensure bm-agent owns the persistent directory it needs to write to.
+  # This is critical for conda env creation and other operations.
+  sudo rm -rf /mnt/disks/persist/bm-agent
+  sudo mkdir -p /mnt/disks/persist/bm-agent
+  sudo chown -R bm-agent:bm-agent /mnt/disks/persist/bm-agent
+
+  # Set HF_HOME to a directory owned by bm-agent so models are cached correctly.
+  # This is set globally for the service via /etc/environment.
+  HF_HOME_VAR='HF_HOME=/mnt/disks/persist/bm-agent/hf_home'
+  if ! grep -q "^${HF_HOME_VAR}$" /etc/environment; then
+    echo "Appending ${HF_HOME_VAR} to /etc/environment..."
+    echo "${HF_HOME_VAR}" | sudo tee -a /etc/environment > /dev/null
+  else
+    echo "${HF_HOME_VAR} already set in /etc/environment."
+  fi
+
   sudo -u bm-agent -i bash <<'EOF'
   set -euo pipefail
-
   # Miniconda version and install directory
   MINICONDA_VERSION=latest  # adjust if needed
   MINICONDA_DIR="/mnt/disks/persist/bm-agent/miniconda3"
