@@ -44,7 +44,7 @@ INPUT_CSV="$1"
 CODE_HASH="${2:-}"  # optional
 JOB_REFERENCE="${3:-}"
 RUN_TYPE="${4:-"MANUAL"}"
-REPO="${5:-"DEFAULT"}"
+REPO="${5:-"TPU_INFERENCE"}"
 EXTRA_ENVS="${6:-}"
 
 # ==============================================================================

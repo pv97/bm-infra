@@ -53,7 +53,7 @@ else
   echo "$RECORDS_JSON" | jq -c '.rows[]' | while read -r row; do
     RECORD_ID=$(echo "$row" | jq -r '.[0]')
     DEVICE=$(echo "$row" | jq -r '.[1]')
-    QUEUE_TOPIC="vllm-bm-queue-$DEVICE"
+    QUEUE_TOPIC="vllm-janus-queue-$DEVICE"
 
     if ! gcloud pubsub topics describe "$QUEUE_TOPIC" --project="$GCP_PROJECT_ID" &>/dev/null; then
       echo "Topic '$QUEUE_TOPIC' does not exist. Skipping RecordId=$RECORD_ID."
@@ -104,7 +104,7 @@ else
   echo "$RUNNING_JSON" | jq -c '.rows[]' | while read -r row; do
     RECORD_ID=$(echo "$row" | jq -r '.[0]')
     DEVICE=$(echo "$row" | jq -r '.[1]')
-    QUEUE_TOPIC="vllm-bm-queue-$DEVICE"
+    QUEUE_TOPIC="vllm-janus-queue-$DEVICE"
 
     if ! gcloud pubsub topics describe "$QUEUE_TOPIC" --project="$GCP_PROJECT_ID" &>/dev/null; then
       echo "Topic '$QUEUE_TOPIC' does not exist. Skipping RecordId=$RECORD_ID."

@@ -11,7 +11,7 @@ variable "tpu_zone" {
 }
 
 variable "purpose" {
-  default = "bm"
+  default = "janus"
 }
 
 variable "spanner_instance" {
@@ -27,7 +27,11 @@ variable "gcs_bucket" {
 }
 
 variable "v7x_8_count" {
-  default     = 0
+  default     = 2
+}
+
+variable "v7x_2_count" {
+  default     = 4
 }
 
 variable "instance_name_offset" {
@@ -37,6 +41,6 @@ variable "instance_name_offset" {
 }
 
 variable "branch_hash" {
-  default     = "3bf5bd18f5551bb4b4a90ec6aab698650bdff2a5"
+  default     = "939dbfdcdfc8c92997b121dd3e0e77f0aa4a8eb7"
   description = "commit hash of bm-infra branch."
 }
